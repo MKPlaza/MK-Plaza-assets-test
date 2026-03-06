@@ -59,3 +59,25 @@ export interface Manga {
   imageUrl: string;
   url: string;
 }
+
+export interface Game {
+  id: string;
+  title: string;
+  platform: string;
+  system: string;
+  year: string;
+  color: string;
+  desc: string;
+  icon: string;
+  iconColor: string;
+  image: string;
+  link?: string;
+}
+
+export interface FavoriteItem {
+  id: string;
+  type: 'movie' | 'tv' | 'anime' | 'manga' | 'game';
+  title: string;
+  imageUrl: string;
+  link: string;
+}

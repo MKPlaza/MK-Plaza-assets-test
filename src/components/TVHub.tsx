@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Star } from 'lucide-react';
 import { TV_SHOWS } from '../tvData';
 import { motion, AnimatePresence } from 'motion/react';
-import { TVShow } from '../types';
+import { TVShow, FavoriteItem } from '../types';
 
-export default function TVHub() {
+interface TVHubProps {
+  favorites: FavoriteItem[];
+  onToggleFavorite: (item: FavoriteItem) => void;
+}
+
+export default function TVHub({ favorites, onToggleFavorite }: TVHubProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShow, setSelectedShow] = useState<TVShow | null>(null);
 
@@ -15,7 +20,7 @@ export default function TVHub() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto pb-32">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-black text-[var(--mk-gold)] drop-shadow-[0_0_10px_var(--mk-gold)] mb-4">
           MKPlaza's TV Shows
@@ -37,37 +42,66 @@ export default function TVHub() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {filteredShows.map((show, idx) => (
-          <motion.div
-            key={idx}
-            onClick={() => {
-              if (show.link) {
-                window.open(show.link, '_blank');
-              } else {
-                setSelectedShow(show);
-              }
-            }}
-            whileHover={{ y: -10, scale: 1.02 }}
-            className="bg-[var(--glass-heavy)] backdrop-blur-xl border border-yellow-400/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col group cursor-pointer"
-          >
-            <div className="aspect-[2/3] relative overflow-hidden">
-              <img 
-                src={show.imageUrl} 
-                alt={show.title} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--mk-midnight)] to-transparent opacity-60" />
-            </div>
-            <div className="p-5 flex-1 flex flex-col">
-              <h3 className="text-lg font-bold text-[var(--mk-gold)] mb-2 line-clamp-1">{show.title}</h3>
-              {show.description && <p className="text-xs text-[var(--mk-silver)]/70 mb-4 line-clamp-3 flex-1">{show.description}</p>}
-              <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--mk-gold)]/50 mt-auto">
-                {show.year || 'Series'}
+        {filteredShows.map((show, idx) => {
+          const isFavorited = favorites.some(f => f.id === show.title);
+          return (
+            <motion.div
+              key={idx}
+              whileHover={{ y: -10, scale: 1.02 }}
+              className="bg-[var(--glass-heavy)] backdrop-blur-xl border border-yellow-400/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col group cursor-pointer relative"
+            >
+              <div className="aspect-[2/3] relative overflow-hidden" onClick={() => {
+                if (show.link) {
+                  window.open(show.link, '_blank');
+                } else {
+                  setSelectedShow(show);
+                }
+              }}>
+                <img 
+                  src={show.imageUrl} 
+                  alt={show.title} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--mk-midnight)] to-transparent opacity-60" />
               </div>
-            </div>
-          </motion.div>
-        ))}
+
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite({
+                    id: show.title,
+                    type: 'tv',
+                    title: show.title,
+                    imageUrl: show.imageUrl,
+                    link: show.link || '#'
+                  });
+                }}
+                className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-md border transition-all z-10 ${
+                  isFavorited 
+                    ? 'bg-[var(--mk-gold)] border-[var(--mk-gold)] text-[var(--mk-midnight)]' 
+                    : 'bg-black/40 border-white/10 text-white hover:border-[var(--mk-gold)] hover:text-[var(--mk-gold)]'
+                }`}
+              >
+                <Star className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+              </button>
+
+              <div className="p-5 flex-1 flex flex-col" onClick={() => {
+                if (show.link) {
+                  window.open(show.link, '_blank');
+                } else {
+                  setSelectedShow(show);
+                }
+              }}>
+                <h3 className="text-lg font-bold text-[var(--mk-gold)] mb-2 line-clamp-1">{show.title}</h3>
+                {show.description && <p className="text-xs text-[var(--mk-silver)]/70 mb-4 line-clamp-3 flex-1">{show.description}</p>}
+                <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--mk-gold)]/50 mt-auto">
+                  {show.year || 'Series'}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       <AnimatePresence>

@@ -25,7 +25,7 @@ export const THEMES: Record<string, ThemePreset> = {
     eyes: '#ef4444',
     gold: '#ff2a50',
     pixel: false,
-    bg: 'https://cdn.jsdelivr.gh/MKPlaza/MKPlaza.github.io@main/RaFxim (1).webp',
+    bg: 'https://cdn.jsdelivr.net/gh/MKPlaza/MKPlaza.github.io@main/RaFxim.webp',
     logo: 'https://cdn.jsdelivr.net/gh/MKPlaza/MKPlaza.github.io@main/yr10lm032g111-removebg-preview.png'
   },
   galacta: {
@@ -52,7 +52,7 @@ export const THEMES: Record<string, ThemePreset> = {
     eyes: '#00ffff',
     gold: '#00ffff',
     pixel: false,
-    bg: 'https://cdn.jsdelivr.net/gh/MKPlaza/MKPlaza.github.io@main/KPR_Mecha_Knight_Infobox (1).jpg',
+    bg: 'https://cdn.jsdelivr.net/gh/MKPlaza/MKPlaza.github.io@main/KPR_Mecha_Knight_Infobox.jpg',
     logo: 'https://cdn.jsdelivr.net/gh/MKPlaza/MKPlaza.github.io@main/mecha-knight-icon.png'
   },
   phantom: {

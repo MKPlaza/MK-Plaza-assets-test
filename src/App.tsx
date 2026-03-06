@@ -22,26 +22,64 @@ import {
   BatteryLow,
   Clock,
   Github,
-  MessageSquare,
   ChevronLeft,
-  Music
+  Music,
+  Home,
+  EyeOff,
+  Maximize2,
+  ExternalLink,
+  Shield,
+  Handshake
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { THEMES, CLOAKS, PLAYLIST, MUSIC_BASE_URL } from './constants';
-import { ThemePreset } from './types';
+import { ThemePreset, FavoriteItem, Game } from './types';
+import { GAME_PAYLOADS } from './gamePayloads';
+import { MOVIES } from './movieData';
+import { TV_SHOWS } from './tvData';
+import { ANIME } from './animeData';
+import { MANGA } from './mangaData';
+import { GAMES } from './gameData';
+import { PROXIES } from './proxyData';
+import { PARTNERS } from './partnerData';
 import MovieHub from './components/MovieHub';
 import TVHub from './components/TVHub';
 import AnimeHub from './components/AnimeHub';
 import MangaHub from './components/MangaHub';
 import MusicHub from './components/MusicHub';
+import HomeHub from './components/HomeHub';
+import GamesHub from './components/GamesHub';
+import ProxiesHub from './components/ProxiesHub';
+import PartnersHub from './components/PartnersHub';
 
 export default function App() {
   const [currentTheme, setCurrentTheme] = useState<ThemePreset>(THEMES.original);
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
-  const [activeHub, setActiveHub] = useState<string | null>(null);
+  const [activeHub, setActiveHub] = useState<string | null>('home');
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const [battery, setBattery] = useState<{ level: number; charging: boolean } | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  const [favorites, setFavorites] = useState<FavoriteItem[]>(() => {
+    const saved = localStorage.getItem('mk_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mk_favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (item: FavoriteItem) => {
+    setFavorites(prev => {
+      const exists = prev.find(f => f.id === item.id);
+      if (exists) {
+        return prev.filter(f => f.id !== item.id);
+      }
+      return [...prev, item];
+    });
+  };
   
   // Music Player State
   const [isPlaying, setIsPlaying] = useState(false);
@@ -71,6 +109,13 @@ export default function App() {
     }
 
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    // Show welcome message
+    setShowWelcome(true);
+    const timer = setTimeout(() => setShowWelcome(false), 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -118,7 +163,7 @@ export default function App() {
   };
 
   const goHome = () => {
-    setActiveHub(null);
+    setActiveHub('home');
   };
 
   const initiateCloak = () => {
@@ -135,8 +180,6 @@ export default function App() {
     if (win) {
       const doc = win.document;
       doc.open();
-      // We need to inject the current page's HTML into the new window
-      // But since we are in a React app, we might want to just inject a simple iframe or the whole body
       doc.write(document.documentElement.outerHTML);
       doc.close();
       
@@ -169,10 +212,36 @@ export default function App() {
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* Background Overlay */}
-      {/* Removed overlay to show raw image as requested */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[5000] bg-[var(--mk-midnight)]/90 backdrop-blur-xl border border-[var(--mk-gold)]/30 px-8 py-4 rounded-2xl shadow-[0_0_30px_rgba(255,215,0,0.2)] flex items-center gap-4"
+          >
+            <div className="w-10 h-10 rounded-full bg-[var(--mk-gold)]/10 flex items-center justify-center">
+              <motion.img 
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                src={currentTheme.logo} 
+                className="w-6 h-6" 
+              />
+            </div>
+            <div>
+              <h3 className="text-[var(--mk-gold)] font-bold text-sm uppercase tracking-widest">Tab Open!</h3>
+              <p className="text-[var(--mk-silver)] text-xs font-medium">Welcome to MK-Plaza</p>
+            </div>
+            <button 
+              onClick={() => setShowWelcome(false)}
+              className="ml-4 text-[var(--mk-silver)]/40 hover:text-[var(--mk-gold)] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Header */}
       <header className="fixed top-0 left-0 w-full h-20 bg-[var(--glass)] backdrop-blur-xl flex items-center justify-between px-8 z-[2000] shadow-2xl border-b border-white/5">
         <div className="flex items-center gap-6">
           <motion.img 
@@ -200,10 +269,25 @@ export default function App() {
           </div>
         </div>
 
+        <div className="flex-1 overflow-hidden mx-8 hidden lg:flex items-center">
+          <div className="flex gap-12 animate-marquee-reverse whitespace-nowrap text-[var(--mk-gold)] font-bold tracking-widest uppercase text-sm opacity-70">
+            {[...Array(2)].map((_, i) => (
+              <React.Fragment key={i}>
+                <span>Chill Kirb Central is still peak</span>
+                <span>placeholder</span>
+                <span>Chill Kirb Central is still peak</span>
+                <span>placeholder</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-5">
             <a href="https://discord.gg/kZzGNnmjpv" target="_blank" className="text-[var(--mk-silver)] opacity-70 hover:opacity-100 hover:text-[var(--mk-gold)] transition-all hover:-translate-y-0.5">
-              <MessageSquare className="w-6 h-6" />
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.419-2.1568 2.419z" />
+              </svg>
             </a>
             <a href="https://github.com/MKPlaza" target="_blank" className="text-[var(--mk-silver)] opacity-70 hover:opacity-100 hover:text-[var(--mk-gold)] transition-all hover:-translate-y-0.5">
               <Github className="w-6 h-6" />
@@ -218,7 +302,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Sub-Nav */}
       <motion.nav 
         animate={{ 
           y: isNavCollapsed ? -140 : 0,
@@ -228,20 +311,30 @@ export default function App() {
         className="fixed top-20 left-0 w-full h-[60px] bg-[var(--glass-heavy)] backdrop-blur-2xl border-b border-yellow-400/15 flex items-center justify-center gap-4 px-5 z-[1999]"
       >
         {[
-          { id: 'movies', label: 'Movies', icon: Film },
-          { id: 'tv', label: 'TV Shows', icon: Tv },
-          { id: 'anime', label: 'Anime', icon: Ghost },
-          { id: 'manga', label: 'Manga', icon: BookOpenText },
-          { id: 'games', label: 'Games', icon: Gamepad2 },
+          { id: 'hide', label: 'Hide', icon: EyeOff, action: () => setActiveHub(null) },
+          { id: 'movies', label: 'Movies', icon: Film, count: MOVIES.length },
+          { id: 'tv', label: 'TV Shows', icon: Tv, count: TV_SHOWS.length },
+          { id: 'anime', label: 'Anime', icon: Ghost, count: ANIME.length },
+          { id: 'manga', label: 'Manga', icon: BookOpenText, count: MANGA.length },
+          { id: 'games', label: 'Games', icon: Gamepad2, count: GAMES.length },
           { id: 'music', label: 'Music', icon: Music },
+          { id: 'proxies', label: 'Proxies', icon: Shield, count: PROXIES.length },
+          { id: 'partners', label: 'Partners', icon: Handshake, count: PARTNERS.length },
         ].map((item) => (
           <button
             key={item.id}
-            onClick={() => loadHub(item.id)}
+            onClick={() => item.action ? item.action() : loadHub(item.id)}
             className="flex items-center gap-2.5 text-[var(--mk-silver)] px-4 py-2 rounded-lg transition-all border border-transparent hover:bg-yellow-400/10 hover:border-yellow-400/30 hover:-translate-y-0.5 group"
           >
             <item.icon className="w-5 h-5 text-[var(--mk-eye-glow)] drop-shadow-[0_0_5px_var(--mk-eye-glow)]" />
-            <span className="text-[11px] font-bold uppercase tracking-wider">{item.label}</span>
+            <div className="flex flex-col items-start">
+              <span className="text-[11px] font-bold uppercase tracking-wider">{item.label}</span>
+              {item.count !== undefined && (
+                <span className="text-[9px] opacity-50 font-mono tracking-tighter">
+                  {item.count.toString().padStart(2, '0')} Units
+                </span>
+              )}
+            </div>
           </button>
         ))}
 
@@ -253,7 +346,6 @@ export default function App() {
         </button>
       </motion.nav>
 
-      {/* Restore Nav Button */}
       <AnimatePresence>
         {isNavCollapsed && (
           <motion.button 
@@ -275,10 +367,20 @@ export default function App() {
           height: isNavCollapsed ? 'calc(100% - 80px)' : 'calc(100% - 140px)'
         }}
       >
-        {activeHub === 'movies' && <MovieHub />}
-        {activeHub === 'tv' && <TVHub />}
-        {activeHub === 'anime' && <AnimeHub />}
-        {activeHub === 'manga' && <MangaHub />}
+        {activeHub === 'home' && (
+          <HomeHub 
+            onNavigate={loadHub} 
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            favorites={favorites}
+            onRemoveFavorite={(id) => setFavorites(prev => prev.filter(f => f.id !== id))}
+            currentTheme={currentTheme}
+          />
+        )}
+        {activeHub === 'movies' && <MovieHub favorites={favorites} onToggleFavorite={toggleFavorite} />}
+        {activeHub === 'tv' && <TVHub favorites={favorites} onToggleFavorite={toggleFavorite} />}
+        {activeHub === 'anime' && <AnimeHub favorites={favorites} onToggleFavorite={toggleFavorite} />}
+        {activeHub === 'manga' && <MangaHub favorites={favorites} onToggleFavorite={toggleFavorite} />}
+        {activeHub === 'games' && <GamesHub favorites={favorites} onToggleFavorite={toggleFavorite} setSelectedGame={setSelectedGame} />}
         {activeHub === 'music' && (
           <MusicHub 
             currentSongIndex={currentSongIndex} 
@@ -287,14 +389,65 @@ export default function App() {
             togglePlay={togglePlay}
           />
         )}
-        {activeHub === 'games' && (
-          <div className="flex items-center justify-center h-full text-[var(--mk-gold)] text-xl">
-            GAMES Hub coming soon...
-          </div>
-        )}
+        {activeHub === 'proxies' && <ProxiesHub />}
+        {activeHub === 'partners' && <PartnersHub />}
       </main>
 
-      {/* Music Player */}
+      <AnimatePresence>
+        {selectedGame && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[6000] bg-black flex flex-col h-screen overflow-hidden"
+          >
+            <div className="flex-none bg-black/50 backdrop-blur-md flex items-center justify-between px-4 py-2 border-b border-white/10">
+              <button 
+                onClick={() => setSelectedGame(null)}
+                className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors font-medium text-sm"
+              >
+                <X className="w-4 h-4" /> Back
+              </button>
+              <div className="text-white text-xs font-bold flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[var(--mk-gold)] rounded-full animate-pulse"></div>
+                {selectedGame.title}
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => {
+                  if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                  } else {
+                    document.exitFullscreen();
+                  }
+                }} className="p-2 text-neutral-400 hover:text-white transition-colors">
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => {
+                  if (selectedGame?.link) {
+                    window.open(selectedGame.link, '_blank');
+                  }
+                }} className="p-2 text-neutral-400 hover:text-white transition-colors">
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-grow bg-black relative">
+              <iframe 
+                className="w-full h-full border-none bg-black"
+                allow="fullscreen; gamepad; autoplay"
+                srcDoc={GAME_PAYLOADS[selectedGame.id]?.customHtml || `<!DOCTYPE html><html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;font-family:sans-serif">
+                    <div style="text-align:center">
+                        <h2 style="letter-spacing:4px">EMULATING ${selectedGame.title.toUpperCase()}</h2>
+                        <div style="width:50px;height:2px;background:#e63946;margin:20px auto"></div>
+                        <p style="opacity:0.6;font-size:12px;text-transform:uppercase">Connecting to secure ROM vault...</p>
+                    </div>
+                </body></html>`}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div 
         animate={{ left: isPlayerCollapsed ? -415 : 30 }}
         transition={{ type: 'spring', damping: 25, stiffness: 120 }}
@@ -334,7 +487,6 @@ export default function App() {
         </button>
       </motion.div>
 
-      {/* Settings Modal */}
       <AnimatePresence>
         {isSettingsOpen && (
           <div 
@@ -356,7 +508,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Theme Section */}
               <div className="mb-8">
                 <div className="text-[11px] text-[var(--mk-eye-glow)] uppercase mb-4 font-bold flex items-center gap-2">
                   <Palette className="w-4 h-4" /> Knight Presets
@@ -375,7 +526,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Cloak Section */}
               <div>
                 <div className="text-[11px] text-[var(--mk-eye-glow)] uppercase mb-4 font-bold flex items-center gap-2">
                   <Ghost className="w-4 h-4" /> Cloak Methods
